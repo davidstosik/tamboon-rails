@@ -8,12 +8,19 @@ class WebsiteTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  def stub_charge_create(success: true)
+  def stub_charge_create(success: true, error: false)
     stub_create = lambda do |params|
-      OpenStruct.new(
-        amount: params[:amount].to_i,
-        paid: success,
-      )
+      if error
+        raise Omise::Error.new(
+          'message' => "token #{params[:card]} was not found",
+          'code' => 'not_found'
+        )
+      else
+        OpenStruct.new(
+          amount: params[:amount].to_i,
+          paid: success,
+        )
+      end
     end
     Omise::Charge.stub(:create, stub_create) do
       yield
@@ -47,6 +54,28 @@ class WebsiteTest < ActionDispatch::IntegrationTest
     assert_equal t("website.donate.failure"), flash.now[:alert]
   end
 
+  test "that if someone fails to provide an amount it shows an error" do
+    charity = charities(:children)
+
+    stub_token_retrieve do
+      post donate_path, omise_token: "tokn_X", charity: charity.id
+    end
+
+    assert_template :index
+    assert_equal t("website.donate.failure"), flash.now[:alert]
+  end
+
+  test "that if someone inputs an invalid amount it shows an error" do
+    charity = charities(:children)
+
+    stub_token_retrieve do
+      post donate_path, amount: "100invalid", omise_token: "tokn_X", charity: charity.id
+    end
+
+    assert_template :index
+    assert_equal t("website.donate.failure"), flash.now[:alert]
+  end
+
   test "that someone can't donate 0 to a charity" do
     charity = charities(:children)
 
@@ -72,6 +101,17 @@ class WebsiteTest < ActionDispatch::IntegrationTest
   test "that someone can't donate without a token" do
     charity = charities(:children)
     post donate_path, amount: "100", charity: charity.id
+
+    assert_template :index
+    assert_equal t("website.donate.failure"), flash.now[:alert]
+  end
+
+  test "that if someone tries to provide an invalid token it shows an error" do
+    charity = charities(:children)
+
+    stub_charge_create(error: true) do
+      post donate_path, amount: "100", omise_token: "tokn_X", charity: charity.id
+    end
 
     assert_template :index
     assert_equal t("website.donate.failure"), flash.now[:alert]
