@@ -131,6 +131,32 @@ class WebsiteTest < ActionDispatch::IntegrationTest
     assert_equal expected_total, charity.reload.total
   end
 
+  test "that someone can donate a decimal amount to a charity" do
+    charity = charities(:children)
+    donated_amount = 100.77
+    initial_total = charity.total
+    expected_total = initial_total + 100 * donated_amount
+
+    stub_charge_create do
+      post_via_redirect donate_path, amount: donated_amount.to_s, omise_token: "tokn_X", charity: charity.id
+    end
+
+    assert_template :index
+    assert_equal t("website.donate.success"), flash[:notice]
+    assert_equal expected_total, charity.reload.total
+  end
+
+  test "that someone should not input too many decimals in the amount" do
+    charity = charities(:children)
+
+    stub_token_retrieve do
+      post_via_redirect donate_path, amount: "100.777", omise_token: "tokn_X", charity: charity.id
+    end
+
+    assert_template :index
+    assert_equal t("website.donate.failure"), flash.now[:alert]
+  end
+
   test "that if the charge fail from omise side it shows an error" do
     charity = charities(:children)
 

@@ -11,14 +11,14 @@ class WebsiteController < ApplicationController
     charity = Charity.find_by(id: params[:charity])
 
     amount = get_amount
-    unless charity && amount && amount > 20
+    unless charity && amount && amount > 2000
       @token = retrieve_token(params[:omise_token])
       failure
       return
     end
 
     charge = Omise::Charge.create({
-      amount: amount * 100,
+      amount: amount,
       currency: "THB",
       card: params[:omise_token],
       description: "Donation to #{charity.name} [#{charity.id}]",
@@ -43,8 +43,14 @@ class WebsiteController < ApplicationController
   end
 
   def get_amount
-    amount_str = params.fetch(:amount, '').strip
-    Integer(amount_str)
+    amount_s = params.fetch(:amount, '').strip
+    amount_f = Float(amount_s) * 100
+    amount_i = amount_f.to_i
+    if amount_i == amount_f
+      amount_i
+    else
+      nil
+    end
   rescue ArgumentError
     nil
   end
