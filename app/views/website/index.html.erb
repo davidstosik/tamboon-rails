@@ -9,6 +9,10 @@
         <%= label_tag "charity_#{charity.id}", charity.name %>
       </li>
     <% end %>
+    <li>
+      <%= radio_button_tag :charity, 'random' %>
+      <%= label_tag "charity_random", t('.random') %>
+    </li>
   </ul>
 
   <div>

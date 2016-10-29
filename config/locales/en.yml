@@ -14,3 +14,5 @@ en:
       link: "Donate"
       success: "Success you've donated some money money money."
       failure: "It seems like this didn't work so well. Try again maybe?"
+    index:
+      random: "I don't know: pick a random charity"

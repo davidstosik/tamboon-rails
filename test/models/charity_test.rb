@@ -8,7 +8,6 @@ class CharityTest < ActiveSupport::TestCase
     assert_equal 10000, charity.total
   end
 
-  # FIXME There's a race condition in the credit_amount method
   test "that a charity total balance is correct even if credited from two different ruby objects" do
     charity = charities(:children)
 
@@ -21,5 +20,9 @@ class CharityTest < ActiveSupport::TestCase
     charity_b.credit_amount(10000)
 
     assert_equal 20000, charity.reload.total
+  end
+
+  test "that we can fetch a random charity" do
+    assert Charity.random.is_a? Charity
   end
 end
