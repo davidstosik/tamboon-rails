@@ -8,9 +8,9 @@ class WebsiteController < ApplicationController
   def donate
     return failure unless params[:omise_token].present?
 
-    charity = Charity.find_by(id: params[:charity])
-
+    charity = get_charity
     amount = get_amount
+
     unless charity && amount && amount > 2000
       @token = retrieve_token(params[:omise_token])
       failure
@@ -53,5 +53,13 @@ class WebsiteController < ApplicationController
     end
   rescue ArgumentError
     nil
+  end
+
+  def get_charity
+    if params[:charity] == 'random'
+      Charity.random
+    else
+      Charity.find_by(id: params[:charity])
+    end
   end
 end

@@ -21,4 +21,8 @@ class CharityTest < ActiveSupport::TestCase
 
     assert_equal 20000, charity.reload.total
   end
+
+  test "that we can fetch a random charity" do
+    assert Charity.random.is_a? Charity
+  end
 end

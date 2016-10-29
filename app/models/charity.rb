@@ -8,4 +8,8 @@ class Charity < ActiveRecord::Base
       update_attribute :total, new_total
     end
   end
+
+  def self.random
+    order('RANDOM()').first
+  end
 end
